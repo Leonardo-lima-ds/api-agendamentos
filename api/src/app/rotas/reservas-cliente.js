@@ -7,6 +7,7 @@ module.exports = (app) => {
     // Autenticação com token obrigatória
     app.use(authMiddleware);
 
+    // Retorna todos os serviços cadastrados pelas empresas e a capacidade de atendimento
     app.get('/servicos-disponiveis', async (req, res) => {
         Servicos.find().populate('empresa').then((retorno) => {
 
@@ -14,10 +15,14 @@ module.exports = (app) => {
 
                 //Se eu tenho serviços cadastrados e eles tem capacidade de atendimento
                 if (parseInt(retorno[i].capacidade_atendimento) > parseInt(retorno[i].total_reservas)) {
-                   return res.status(200).json(retorno);
+
+                    //Número de reservas ainda disponíveis
+                    let capacidade_restante = (retorno[i].capacidade_atendimento - retorno[i].total_reservas);
+                    return res.status(200).json({ servico: retorno, capacidade_restante: capacidade_restante });
+
                 } 
                 else {
-                    return res.status(200).json({ message: 'Capacidade máxima atingida'})
+                    return res.status(200).json({ message: 'Reservas esgotadas.'});
                 }
 
             }
@@ -63,8 +68,18 @@ module.exports = (app) => {
     app.post('/reserva', async (req, res) => {
 
         let { quantidade_pessoas } = req.body;
+        let { servico } = req.body;
 
         try {
+
+            //Verifica se a quantidades de pessoas excede a capacidade de atendimento
+            Reserva.findById({servico}).then((resultado) => {
+
+                if (resultado.total_reservas + quantidade_pessoas > capacidade_atendimento) {
+                    return res.status(204).json({ message: 'O número de pessoas excede s cspscidade máxima.'})
+                }
+
+            });
             // Cria uma reserva com o userId passada na requisição
             await Reserva.create({ ...req.body, usuario: req.userId }).then( async (retorno) => {
                 
