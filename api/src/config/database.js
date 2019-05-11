@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+//Conexão com o mongodb na database reserva
 mongoose.connect('mongodb://localhost/reserva', {
     useNewUrlParser: true
 });

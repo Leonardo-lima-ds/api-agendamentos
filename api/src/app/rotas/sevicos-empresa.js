@@ -5,6 +5,7 @@ module.exports = (app) => {
 
     app.use(authMiddleware);
 
+    //Criaçaão de novo serviço
     app.post('/servico', async (req, res) => {
 
         try {
